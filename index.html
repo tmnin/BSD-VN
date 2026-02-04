@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>事件ファイル：武装探偵社（Allie）</title>
+  <style>
+    :root{
+      --bg:#070a12;
+      --ink:#eaf0ff;
+      --muted:#a9b4d6;
+      --line:rgba(255,255,255,.12);
+      --accent:#ff4da6;
+      --good:#48d597;
+      --warn:#ffd166;
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(900px 500px at 20% -10%, rgba(255,77,166,.22), transparent 60%),
+        radial-gradient(900px 600px at 110% 0%, rgba(72,213,151,.16), transparent 65%),
+        radial-gradient(900px 700px at 50% 120%, rgba(255,209,102,.10), transparent 70%),
+        var(--bg);
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Segoe UI, Roboto, Helvetica, Arial;
+      padding:18px;
+    }
+
+    .frame{
+      width:min(980px,100%);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      overflow:hidden;
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .title h1{margin:0;font-size:18px;letter-spacing:.3px}
+    .title .sub{margin:0;color:var(--muted);font-size:12.5px;line-height:1.35}
+    .badge{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 10px;
+      color:var(--muted);
+      font-size:12px;
+      background:rgba(255,255,255,.03);
+      white-space:nowrap;
+    }
+
+    .stage{
+      position:relative;
+      height:540px;
+      background:
+        radial-gradient(1200px 700px at 50% 10%, rgba(255,255,255,.06), transparent 60%),
+        linear-gradient(180deg, rgba(0,0,0,.20), rgba(0,0,0,.40));
+    }
+    @media (max-width:860px){ .stage{height:600px} }
+
+    .stage:before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px) 0 0/60px 60px,
+        linear-gradient(0deg, rgba(255,255,255,.04) 1px, transparent 1px) 0 0/60px 60px;
+      opacity:.25;
+      pointer-events:none;
+    }
+
+    .character-area{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding-bottom:140px;
+    }
+
+    .char-card{
+      width:min(420px, 86%);
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:rgba(0,0,0,.22);
+      padding:16px;
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .char-card:before{
+      content:"";
+      position:absolute; inset:-40px;
+      background:
+        radial-gradient(600px 300px at 30% 20%, rgba(255,77,166,.12), transparent 60%),
+        radial-gradient(600px 300px at 80% 0%, rgba(72,213,151,.10), transparent 60%);
+      pointer-events:none;
+    }
+    .char{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding:10px 8px 6px;
+    }
+    .silhouette{
+      width:160px;height:160px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:46px;
+      filter:drop-shadow(0 18px 40px rgba(0,0,0,.40));
+    }
+    .charname{font-size:16px;letter-spacing:.4px}
+    .charnote{color:var(--muted);font-size:12.5px;line-height:1.45;margin:0}
+
+    .dialogue{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      padding:12px 12px 14px;
+      background:linear-gradient(180deg, transparent, rgba(0,0,0,.55) 18%, rgba(0,0,0,.78));
+    }
+    .box{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(0,0,0,.30);
+      padding:12px 12px 10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      backdrop-filter: blur(6px);
+    }
+    .speaker{
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+    }
+    .line{
+      font-size:15px;
+      line-height:1.65;
+      min-height:56px;
+      white-space:pre-wrap;
+    }
+    .controls{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      margin-top:2px;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--ink);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:13px;
+      user-select:none;
+      transition:transform .08s ease, background .15s ease, border-color .15s ease;
+    }
+    .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.07)}
+    .btn.primary{border-color: rgba(255,77,166,.60); background:rgba(255,77,166,.12)}
+    .btn.good{border-color: rgba(72,213,151,.70); background:rgba(72,213,151,.12)}
+    .btn.warn{border-color: rgba(255,209,102,.70); background:rgba(255,209,102,.10)}
+    .btn:disabled{opacity:.55; cursor:not-allowed; transform:none}
+
+    .puzzle{
+      margin-top:8px;
+      border-top:1px solid var(--line);
+      padding-top:10px;
+      display:none;
+      gap:10px;
+      flex-direction:column;
+    }
+    .puzzle .hint{color:var(--muted);font-size:12.5px;line-height:1.45;margin:0}
+    input[type="text"]{
+      width:100%;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.28);
+      color:var(--ink);
+      outline:none;
+      font-size:14px;
+    }
+    .status{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25)}
+    .ok{border-color: rgba(72,213,151,.55); color: rgba(210,255,234,.92)}
+    .ok .dot{background:var(--good)}
+    .nope{border-color: rgba(255,77,166,.55); color: rgba(255,214,235,.92)}
+    .nope .dot{background:var(--accent)}
+
+    .arena{
+      margin-top:10px;
+      height:140px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(0,0,0,.22);
+      position:relative;
+      overflow:hidden;
+      display:none;
+    }
+    .floating{
+      position:absolute;
+      left:50%; top:52%;
+      transform:translate(-50%,-50%);
+      min-width:150px;
+      text-align:center;
+    }
+    .floating.no{min-width:130px}
+    .final{
+      margin-top:10px;
+      display:none;
+      text-align:center;
+    }
+    .final p{margin:8px 0;color:var(--muted);line-height:1.6}
+    img.gif{
+      width:min(420px,100%);
+      border-radius:16px;
+      border:1px solid var(--line);
+      box-shadow: 0 16px 55px rgba(0,0,0,.35);
+    }
+
+    canvas#confetti{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:999;
+      display:none;
+    }
+  </style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<div class="frame">
+  <div class="top">
+    <div class="title">
+      <h1>武装探偵社・事件ファイル：<span style="color:var(--accent)">ALLIE</span></h1>
+      <p class="sub">――今日もいつも通りの一日…のはずだった。</p>
+    </div>
+    <div class="badge" id="badge">状況：未解決 / 依頼番号 0214</div>
+  </div>
+
+  <div class="stage">
+    <div class="character-area">
+      <div class="char-card">
+        <div class="char">
+          <div class="silhouette" id="portrait">🕵️</div>
+          <div class="charname" id="charName">太宰治</div>
+          <p class="charnote" id="charNote">（落ち着いた声。どこか悪戯っぽい。）</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialogue">
+      <div class="box">
+        <div class="speaker" id="speaker">太宰治</div>
+        <div class="line" id="line"></div>
+
+        <!-- Puzzle box (reused for both puzzles) -->
+        <div class="puzzle" id="puzzle">
+          <p class="hint" id="puzzlePrompt"></p>
+          <input id="answer" type="text" placeholder="" autocomplete="off" />
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn good" id="check">照合する</button>
+            <span class="status" id="status"><span class="dot"></span>待機中</span>
+            <button class="btn warn" id="hint">ヒント</button>
+          </div>
+          <p class="hint" id="hintText"></p>
+        </div>
+
+        <div class="arena" id="arena">
+          <button class="btn primary floating" id="yesBtn">はい</button>
+          <button class="btn floating no" id="noBtn">いいえ</button>
+        </div>
+
+        <div class="final" id="final">
+          <img class="gif" id="gif" alt="yippee" />
+          <p id="finalText"></p>
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="skip">スキップ</button>
+          <button class="btn primary" id="next">次へ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========= Edit these if you want ========= */
+const YOU = "Abeer";
+const HER = "Allie";
+const CORGI = "Yokai";
+const YIPPEE_GIF = "https://media.tenor.com/6gHLhmwO87sAAAAC/yippee-happy.gif";
+
+const FINAL_LETTER =
+`${HER}、事件は解決。💗
+
+一緒に言語を学んで、笑って、遠くても繋がっていられるのが本当に嬉しい。
+今年のバレンタイン、私のバレンタインになってくれますか？
+
+— ${YOU}`;
+/* ======================================== */
+
+const el = {
+  badge: document.getElementById("badge"),
+  portrait: document.getElementById("portrait"),
+  charName: document.getElementById("charName"),
+  charNote: document.getElementById("charNote"),
+  speaker: document.getElementById("speaker"),
+  line: document.getElementById("line"),
+  next: document.getElementById("next"),
+  skip: document.getElementById("skip"),
+
+  puzzle: document.getElementById("puzzle"),
+  puzzlePrompt: document.getElementById("puzzlePrompt"),
+  answer: document.getElementById("answer"),
+  check: document.getElementById("check"),
+  status: document.getElementById("status"),
+  hint: document.getElementById("hint"),
+  hintText: document.getElementById("hintText"),
+
+  arena: document.getElementById("arena"),
+  yesBtn: document.getElementById("yesBtn"),
+  noBtn: document.getElementById("noBtn"),
+
+  final: document.getElementById("final"),
+  gif: document.getElementById("gif"),
+  finalText: document.getElementById("finalText"),
+
+  confetti: document.getElementById("confetti")
+};
+
+const cast = {
+  dazai:   {name:"太宰治",  icon:"🕵️", note:"（余裕の笑み。こちらを試すような目。）"},
+  atsushi:{name:"中島敦",  icon:"🧾", note:"（真面目。ちょっと慌てている。）"},
+  kunikida:{name:"国木田独歩", icon:"📘", note:"（理想を語りながら眉間に皺。）"},
+  you:     {name:YOU,      icon:"💌", note:"（依頼人。心臓がうるさい。）"}
+};
+
+/**
+ * Two-step puzzle:
+ *  - P1: type "だいすき" (hiragana)
+ *  - P2: type "yokai" (romaji)
+ */
+const puzzleState = {
+  step1Solved: false,
+  step2Solved: false
+};
+
+function setCast(key){
+  const c = cast[key];
+  el.portrait.textContent = c.icon;
+  el.charName.textContent = c.name;
+  el.charNote.textContent = c.note;
+  el.speaker.textContent = c.name;
+}
+
+let idx = 0;
+let typingTimer = null;
+
+function typeText(target, text){
+  if(typingTimer) clearInterval(typingTimer);
+  target.textContent = "";
+  let i=0;
+  typingTimer = setInterval(()=>{
+    target.textContent += text[i] || "";
+    i++;
+    if(i >= text.length){
+      clearInterval(typingTimer);
+      typingTimer = null;
+    }
+  }, 18);
+}
+
+function badgeText(){
+  let p = 0;
+  if(puzzleState.step1Solved) p++;
+  if(puzzleState.step2Solved) p++;
+  const status = p === 0 ? "未解決" : (p === 1 ? "調査中" : "進展あり");
+  return `状況：${status} / 依頼番号 0214 / 手がかり ${p}/2`;
+}
+
+function render(){
+  const s = script[idx];
+  setCast(s.c);
+  typeText(el.line, s.t);
+
+  // puzzle visibility
+  if(s.puzzleStep){
+    showPuzzleForStep(s.puzzleStep);
+    el.next.disabled = true; // locked until solved
+  } else {
+    el.puzzle.style.display = "none";
+    el.next.disabled = false;
+  }
+
+  // arena
+  el.arena.style.display = s.showArena ? "block" : "none";
+
+  // badge
+  el.badge.textContent = badgeText();
+}
+
+function next(){
+  if(idx < script.length - 1){
+    idx++;
+    render();
+  }
+}
+
+function skip(){
+  // Jump forward, but stop on first unsolved puzzle or on the arena question
+  while(idx < script.length - 1){
+    const cur = script[idx];
+    if(cur.puzzleStep){
+      const need = cur.puzzleStep;
+      if(need === 1 && !puzzleState.step1Solved) break;
+      if(need === 2 && !puzzleState.step2Solved) break;
+    }
+    idx++;
+    const nxt = script[idx];
+    if(nxt.puzzleStep){
+      const need = nxt.puzzleStep;
+      if(need === 1 && !puzzleState.step1Solved) break;
+      if(need === 2 && !puzzleState.step2Solved) break;
+    }
+    if(nxt.showArena) break;
+  }
+  render();
+}
+
+function norm(x){ return (x||"").trim(); }
+function normRomaji(x){
+  return (x||"").toLowerCase().replace(/\s+/g,"").trim();
+}
+
+function resetPuzzleUI(){
+  el.answer.value = "";
+  el.hintText.textContent = "";
+  el.status.className = "status";
+  el.status.innerHTML = `<span class="dot"></span>待機中`;
+}
+
+function showPuzzleForStep(step){
+  el.puzzle.style.display = "flex";
+  resetPuzzleUI();
+
+  if(step === 1){
+    el.puzzlePrompt.textContent = "【第一の手がかり】「だいすき」を “ひらがな” で入力して。";
+    el.answer.placeholder = "例：だいすき";
+  } else {
+    el.puzzlePrompt.textContent = "【第二の手がかり】「妖怪（ようかい）」は“ある存在”の名前でもある。ローマ字で入力してね。";
+    el.answer.placeholder = "例：yokai";
+  }
+  el.answer.focus();
+}
+
+// Handlers depend on current script puzzleStep
+function currentPuzzleStep(){
+  const s = script[idx];
+  return s.puzzleStep || null;
+}
+
+el.check.addEventListener("click", ()=>{
+  const step = currentPuzzleStep();
+  if(!step) return;
+
+  if(step === 1){
+    const ans = norm(el.answer.value);
+    const ok = (ans === "だいすき");
+    puzzleState.step1Solved = ok;
+
+    if(ok){
+      el.status.className = "status ok";
+      el.status.innerHTML = `<span class="dot"></span>照合成功`;
+      el.hintText.textContent = "ふふ。簡単すぎたかな。";
+      el.next.disabled = false;
+    } else {
+      el.status.className = "status nope";
+      el.status.innerHTML = `<span class="dot"></span>不一致`;
+      el.hintText.textContent = "ひらがなで、そのまま。";
+    }
+  } else if(step === 2){
+    const ans = normRomaji(el.answer.value);
+    const ok = (ans === "yokai");
+    puzzleState.step2Solved = ok;
+
+    if(ok){
+      el.status.className = "status ok";
+      el.status.innerHTML = `<span class="dot"></span>照合成功`;
+      el.hintText.textContent = `正解。${CORGI} が鍵だった。`;
+      el.next.disabled = false;
+    } else {
+      el.status.className = "status nope";
+      el.status.innerHTML = `<span class="dot"></span>不一致`;
+      el.hintText.textContent = "ローマ字で、短い。";
+    }
+  }
+
+  el.badge.textContent = badgeText();
+});
+
+el.hint.addEventListener("click", ()=>{
+  const step = currentPuzzleStep();
+  if(step === 1){
+    el.hintText.textContent = "ヒント：「大好き」の読み。3文字＋2文字。";
+  } else if(step === 2){
+    el.hintText.textContent = `ヒント：${HER}のコーギーの名前。`;
+  }
+});
+
+el.answer.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") el.check.click();
+});
+
+// Arena (No dodges, Yes celebrates)
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+function place(btn, px, py){
+  btn.style.left = px + "%";
+  btn.style.top  = py + "%";
+  btn.style.transform = "translate(-50%,-50%)";
+}
+function dodge(pointerX, pointerY){
+  const arena = el.arena.getBoundingClientRect();
+  const cx = pointerX - arena.left;
+  const cy = pointerY - arena.top;
+
+  const corners = [
+    {x:18,y:28},{x:82,y:28},{x:18,y:82},{x:82,y:82}
+  ];
+  corners.sort((a,b)=>{
+    const da = (a.x/100*arena.width - cx)**2 + (a.y/100*arena.height - cy)**2;
+    const db = (b.x/100*arena.width - cx)**2 + (b.y/100*arena.height - cy)**2;
+    return db - da;
+  });
+
+  const best = corners[0];
+  const jx = (Math.random()*10 - 5);
+  const jy = (Math.random()*10 - 5);
+  place(el.noBtn, clamp(best.x + jx, 12, 88), clamp(best.y + jy, 18, 88));
+}
+
+function setupArena(){
+  place(el.yesBtn, 35, 55);
+  place(el.noBtn, 65, 55);
+
+  el.arena.addEventListener("mousemove", (e)=>{
+    const r = el.noBtn.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width/2);
+    const dy = e.clientY - (r.top + r.height/2);
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < 120) dodge(e.clientX, e.clientY);
+  });
+  el.noBtn.addEventListener("mouseenter", (e)=>dodge(e.clientX, e.clientY));
+  el.noBtn.addEventListener("touchstart", (e)=>{
+    const t = e.touches[0];
+    dodge(t.clientX, t.clientY);
+  }, {passive:true});
+
+  el.yesBtn.addEventListener("click", ()=>{
+    runConfetti();
+    el.yesBtn.disabled = true;
+    el.noBtn.disabled = true;
+
+    el.final.style.display = "block";
+    el.gif.src = YIPPEE_GIF;
+    el.finalText.textContent = FINAL_LETTER;
+  });
+}
+
+function runConfetti(){
+  const canvas = el.confetti;
+  const ctx = canvas.getContext("2d");
+  canvas.style.display = "block";
+
+  function resize(){
+    canvas.width = window.innerWidth * devicePixelRatio;
+    canvas.height = window.innerHeight * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  const pieces = [];
+  const N = 180;
+  const w = window.innerWidth, h = window.innerHeight;
+
+  for(let i=0;i<N;i++){
+    pieces.push({
+      x: Math.random()*w,
+      y: -20 - Math.random()*h*0.2,
+      r: 4 + Math.random()*6,
+      vx: -2 + Math.random()*4,
+      vy: 2 + Math.random()*4,
+      rot: Math.random()*Math.PI,
+      vr: -0.12 + Math.random()*0.24,
+      hue: Math.floor(Math.random()*360),
+      life: 220 + Math.random()*120
+    });
+  }
+
+  let frame = 0;
+  function tick(){
+    frame++;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for(const p of pieces){
+      p.x += p.vx;
+      p.y += p.vy + 0.02*frame;
+      p.rot += p.vr;
+      p.life -= 1;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = `hsla(${p.hue}, 90%, 65%, .95)`;
+      ctx.fillRect(-p.r, -p.r/2, p.r*2, p.r);
+      ctx.restore();
+    }
+
+    const alive = pieces.some(p => p.life > 0 && p.y < window.innerHeight + 40);
+    if(alive) requestAnimationFrame(tick);
+    else canvas.style.display = "none";
+  }
+  requestAnimationFrame(tick);
+}
+
+// Observe arena display to initialize once
+const obs = new MutationObserver(()=>{
+  if(el.arena.style.display === "block" && !el.arena.__ready){
+    el.arena.__ready = true;
+    setupArena();
+  }
+});
+obs.observe(el.arena, {attributes:true, attributeFilter:["style"]});
+
+/**
+ * Story script (all original lines, BSD-vibe only)
+ * puzzleStep: 1 or 2 to show the puzzle UI and lock "Next" until solved.
+ */
+const script = [
+  {c:"dazai", t:`……やあ、${HER}さん。\n武装探偵社へようこそ。`},
+  {c:"dazai", t:`今日は“簡単な事件”だよ。\n依頼人が、君にだけ渡したい言葉を隠してしまったらしい。`},
+  {c:"atsushi", t:`太宰さん！ それ、業務なんですか……？`},
+  {c:"dazai", t:`もちろん。\n“心の安全”は立派な治安維持だろう？`},
+  {c:"kunikida", t:`……そんな条項は私の手帳にない。`},
+  {c:"dazai", t:`まあまあ。\n${HER}さんが解けるかどうか、試してみたいだけさ。`},
+
+  {c:"dazai", t:`では第一の手がかり。\n依頼人の“本音”は、とても単純な言葉に隠されている。`},
+  {c:"dazai", t:`「だいすき」――\n君なら当然、読めるよね？`, puzzleStep:1},
+
+  {c:"dazai", t:`ふふ。流石。\nじゃあ次。`},
+  {c:"dazai", t:`第二の手がかりは“妖怪（ようかい）”。\nこれはただの単語じゃない。`, },
+  {c:"dazai", t:`君の周りにいる“ある存在”の名前でもある。\nローマ字で入力して、照合してみて。`, puzzleStep:2},
+
+  {c:"dazai", t:`……なるほど。\n鍵はもう揃った。`},
+  {c:"atsushi", t:`え、鍵って……まさか……`},
+  {c:"kunikida", t:`私は関与しないぞ。`},
+  {c:"dazai", t:`最後の扉だ。\n“いいえ”は、たぶん捕まえられないよ。`},
+  {c:"you", t:`${HER}へ。\n……本題に入ってもいい？`},
+  {c:"you", t:`${HER}、私のバレンタインになってくれますか？`, showArena:true}
+];
+
+// controls
+el.next.addEventListener("click", ()=> next());
+el.skip.addEventListener("click", ()=> skip());
+
+// start
+render();
+</script>
+</body>
+</html>
