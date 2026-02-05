@@ -222,35 +222,46 @@ function clearOverlay(){
 }
 
 
+let overlayCurrentKey = null;   // which character is currently on overlay (sprite key)
+let overlaySide = null;         // "overlay_left" or "overlay_right"
+
 function applyStage(line){
   const stage = line.stage || "base";
 
+  // If a line explicitly brings someone in as overlay, update overlay sprite and side
+  if(stage === "overlay_left" || stage === "overlay_right"){
+    overlaySide = stage;
+    overlayCurrentKey = line.sprite;
+
+    setSprite(overlaySprite, overlayCurrentKey);
+
+    // ensure overlay is visible and positioned
+    overlaySprite.style.opacity = "1";
+    overlaySprite.className = (overlaySide === "overlay_left") ? "leftIn" : "rightIn";
+  }
+
+  // If stage is base, we only update base sprite (Dazai expression),
+  // but we do NOT clear overlay. This avoids flicker and feels VN-like.
   if(stage === "base"){
     setSprite(baseSprite, line.sprite);
-    clearOverlay();
-    return;
   }
 
-  // If an overlay is about to come in, cancel any pending clear that would wipe its class
-  if(overlayClearTimer){
-    clearTimeout(overlayClearTimer);
-    overlayClearTimer = null;
+  // Now manage dimming based on who is speaking
+  // If the current line is from Dazai, make him bright and dim overlay
+  const isDazaiSpeaking = line.speaker.startsWith("太宰治") && !line.speaker.includes("手紙");
+
+  if(isDazaiSpeaking){
+    baseSprite.classList.remove("dimmed");
+    if(overlayCurrentKey){
+      overlaySprite.classList.add("dimmed");
+    }
+  } else {
+    // someone else speaking (Atsushi / Kunikida)
+    baseSprite.classList.add("dimmed");
+    if(overlayCurrentKey){
+      overlaySprite.classList.remove("dimmed");
+    }
   }
-
-  if(!baseSprite.src) setSprite(baseSprite, "dazai_neutral");
-  baseSprite.classList.add("dimmed");
-
-  setSprite(overlaySprite, line.sprite);
-
-  // Reset overlay to a neutral hidden state WITHOUT transitions fighting us
-  overlaySprite.style.opacity = "0";
-  overlaySprite.className = ""; // start from center (invisible)
-
-  // Next frame: apply the slide-in class so the transition actually runs
-  requestAnimationFrame(()=>{
-    overlaySprite.className = stage === "overlay_left" ? "leftIn" : "rightIn";
-    overlaySprite.style.opacity = "1";
-  });
 }
 
 
