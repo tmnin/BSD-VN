@@ -5,7 +5,7 @@ const HER = "Allie";
 const YOU = "Abeer";
 const CORGI_NAME = "Yokai";
 
-// put any gif you like here
+// local mp4 (loops)
 const YIPPEE_GIF = "images/gif.mp4";
 
 // Your letter content (Dazai reads it)
@@ -48,7 +48,6 @@ const TYPING_SPEED = {
 // DOM
 // =========================
 const el = {
-  // We'll create a second sprite layer dynamically (base + overlay)
   sprites: document.getElementById("sprites"),
   name: document.getElementById("nameplate"),
   text: document.getElementById("text"),
@@ -56,62 +55,58 @@ const el = {
   nextBtn: document.getElementById("nextBtn"),
   restartBtn: document.getElementById("restartBtn"),
   confetti: document.getElementById("confetti"),
+  dialogueBox: document.getElementById("dialogueBox"),
 };
 
-// Create base + overlay sprites (two-sprite staging)
-const baseSprite = document.getElementById("speakerSprite"); // keep this id
-baseSprite.alt = "";
+// =========================
+// 3-SLOT SPRITES (left/center/right)
+// =========================
+const spritesRoot = el.sprites;
 
-// overlay sprite added
-const overlaySprite = document.createElement("img");
-overlaySprite.id = "overlaySprite";
-overlaySprite.alt = "";
-el.sprites.appendChild(overlaySprite);
+// center uses existing speakerSprite element
+const centerSprite = document.getElementById("speakerSprite");
+centerSprite.id = "centerSprite";
+centerSprite.classList.add("spriteSlot");
 
-// Inject styling for overlay sprite + dimming (so you don't have to edit CSS)
-(function injectSpriteCSS(){
+// create left + right
+const leftSprite = document.createElement("img");
+leftSprite.id = "leftSprite";
+leftSprite.className = "spriteSlot";
+leftSprite.alt = "";
+spritesRoot.appendChild(leftSprite);
+
+const rightSprite = document.createElement("img");
+rightSprite.id = "rightSprite";
+rightSprite.className = "spriteSlot";
+rightSprite.alt = "";
+spritesRoot.appendChild(rightSprite);
+
+// One consistent “upper-body crop/zoom” for ALL sprites (fixes size mismatch)
+(function injectSpriteCSS() {
   const style = document.createElement("style");
   style.textContent = `
-    #baseSprite, #overlaySprite{
-  position:absolute;
-  bottom: -22vh;              /* push legs off screen */
-  height: 120vh;              /* zoom in */
-  max-height: 120vh;
-  width: auto;
-  max-width: 110vw;
-  object-fit: cover;          /* IMPORTANT: crop instead of shrinking */
-  filter: drop-shadow(0 18px 50px rgba(0,0,0,.45));
-  transition: opacity .18s ease, transform .22s ease;
-  pointer-events:none;
-}
+    /* override any older sprite rules */
+    .spriteSlot{
+      position:absolute;
+      left:50%;
+      bottom:-22vh;            /* push lower body off-screen */
+      height:120vh;            /* zoom in */
+      max-height:120vh;
+      width:auto;
+      max-width:110vw;
+      object-fit:cover;        /* crop instead of shrinking */
+      filter: drop-shadow(0 18px 50px rgba(0,0,0,.45));
+      transition: opacity .18s ease, transform .22s ease;
+      pointer-events:none;
+      opacity:0;
+      z-index:2;
+    }
 
-#baseSprite{
-  left:50%;
-  transform: translateX(-50%);
-  opacity:1;
-  z-index:2;
-}
+    #centerSprite{ transform: translateX(-50%); opacity:1; z-index:2; }
+    #leftSprite  { transform: translateX(-65%); z-index:3; }
+    #rightSprite { transform: translateX(-35%); z-index:3; }
 
-#overlaySprite{
-  left:50%;
-  transform: translateX(-50%);
-  opacity:0;
-  z-index:3;
-}
-
-.dimmed{
-  opacity:.55 !important;
-}
-
-.leftIn{
-  transform: translateX(-65%) scale(1.02) !important;
-  opacity:1 !important;
-}
-
-.rightIn{
-  transform: translateX(-35%) scale(1.02) !important;
-  opacity:1 !important;
-}
+    .dimmed{ opacity:.55 !important; }
   `;
   document.head.appendChild(style);
 })();
@@ -121,7 +116,12 @@ el.sprites.appendChild(overlaySprite);
 // =========================
 let idx = 0;
 
-// typing state (callback-based, avoids freeze)
+// who is currently “in the scene”
+let leftKey = null;    // spriteKey currently on left
+let rightKey = null;   // spriteKey currently on right
+let centerKey = "dazai_neutral";
+
+// typing state
 let typingTimer = null;
 let isTyping = false;
 let pendingOnDone = null;
@@ -130,67 +130,73 @@ let pendingOnDone = null;
 const actionShown = new Set();
 
 // blocks next until minigame solved
-let overlayClearTimer = null;
 let mgLock = false;
 
 const progress = {
   mg1: false,
   mg2: false,
   mg3: false,
-  ended: false
+  ended: false,
 };
 
 // =========================
 // SCRIPT (Japanese)
-// Each entry: {speaker, text, spriteKey, action?, stage?}
-// stage options:
-//   - "base" (default): show on base sprite, hide overlay
-//   - "overlay_left": keep base (usually Dazai) dimmed, slide overlay in left
-//   - "overlay_right": keep base dimmed, slide overlay in right
 // =========================
 const SCRIPT = [
-  { speaker:"太宰治", sprite:"dazai_neutral", stage:"base", text:"……やあ。\nようこそ、武装探偵社へ。" },
-  { speaker:"太宰治", sprite:"dazai_neutral", stage:"base", text:"今日は比較的、静かな一日だよ。\nもっとも――「静か」というのは、ここでは少し珍しいけどね。" },
+  { speaker:"太宰治", sprite:"dazai_neutral", text:"……やあ。\nようこそ、武装探偵社へ。" },
+  { speaker:"太宰治", sprite:"dazai_neutral", text:"今日は比較的、静かな一日だよ。\nもっとも――「静か」というのは、ここでは少し珍しいけどね。" },
 
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:`さて。\n君を呼んだ理由なんだけど……ちょっと変わった依頼が入ってきてね。` },
+  { speaker:"太宰治", sprite:"dazai_chill", text:`さて。\n君を呼んだ理由なんだけど……ちょっと変わった依頼が入ってきてね。` },
 
-  // Atsushi interrupts (overlay right)
-  { speaker:"中島敦", sprite:"atsushi_neutral", stage:"overlay_right", text:"あ、太宰さん。\nその依頼って、今日中に処理しないといけないんですよね？" },
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"うーん……どうだろう。\n緊急性はあまりないけど、重要度は高いかな。" },
-  { speaker:"中島敦", sprite:"atsushi_neutral", stage:"overlay_right", text:"それ、仕事として成立してますか……？" },
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"もちろん。\n人の心に関わる案件は、いつだって最優先さ。" },
+  { speaker:"中島敦", sprite:"atsushi_neutral", text:"あ、太宰さん。\nその依頼って、今日中に処理しないといけないんですよね？" },
+  { speaker:"太宰治", sprite:"dazai_chill", text:"うーん……どうだろう。\n緊急性はあまりないけど、重要度は高いかな。" },
+  { speaker:"中島敦", sprite:"atsushi_neutral", text:"それ、仕事として成立してますか……？" },
+  { speaker:"太宰治", sprite:"dazai_chill", text:"もちろん。\n人の心に関わる案件は、いつだって最優先さ。" },
 
-  // Kunikida interrupts (overlay left)
-  { speaker:"国木田独歩", sprite:"kunikida_neutral", stage:"overlay_left", text:"太宰。\n今度は何を企んでいる。" },
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"企むだなんて人聞きが悪いな。\nこれは立派な依頼だよ。" },
-  { speaker:"国木田独歩", sprite:"kunikida_neutral", stage:"overlay_left", text:"……依頼書は？" },
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"それがね、文字だけ残して姿を消してしまってさ。" },
-  { speaker:"国木田独歩", sprite:"kunikida_neutral", stage:"overlay_left", text:"規定違反だ。\n私は関与しない。" },
+  { speaker:"国木田独歩", sprite:"kunikida_neutral", text:"太宰。\n今度は何を企んでいる。" },
+  { speaker:"太宰治", sprite:"dazai_chill", text:"企むだなんて人聞きが悪いな。\nこれは立派な依頼だよ。" },
+  { speaker:"国木田独歩", sprite:"kunikida_neutral", text:"……依頼書は？" },
+  { speaker:"太宰治", sprite:"dazai_chill", text:"それがね、文字だけ残して姿を消してしまってさ。" },
+  { speaker:"国木田独歩", sprite:"kunikida_neutral", text:"規定違反だ。\n私は関与しない。" },
 
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"――というわけで。\n少々自由な進行になるけど、許してほしい。" },
+  { speaker:"太宰治", sprite:"dazai_chill", text:"――というわけで。\n少々自由な進行になるけど、許してほしい。" },
 
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"今回の依頼人は、とても慎重な人物でね。\n自分の気持ちを、そのまま渡すことができなかったらしい。" },
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"だから代わりに、いくつかの「手がかり」を残した。\n言葉に関するもの、選び方に関するもの、そして――とても個人的なもの。" },
+  { speaker:"太宰治", sprite:"dazai_chill", text:"今回の依頼人は、とても慎重な人物でね。\n自分の気持ちを、そのまま渡すことができなかったらしい。" },
+  { speaker:"太宰治", sprite:"dazai_chill", text:"だから代わりに、いくつかの「手がかり」を残した。\n言葉に関するもの、選び方に関するもの、そして――とても個人的なもの。" },
 
-  { speaker:"太宰治", sprite:"dazai_thinking", stage:"base", text:"まずは最初の手がかりだ。\n依頼人は、ある気持ちを言葉にしようとした。\nでも、日本語には似た表現が多すぎる。" },
-  { speaker:"太宰治", sprite:"dazai_thinking", stage:"base", text:"次の中から、「この依頼人の気持ち」に一番近い言葉を選んでほしい。\n……深く考えすぎなくていい。直感で構わないよ。", action:"mg1" },
+  { speaker:"太宰治", sprite:"dazai_thinking", text:"まずは最初の手がかりだ。\n依頼人は、ある気持ちを言葉にしようとした。\nでも、日本語には似た表現が多すぎる。" },
+  { speaker:"太宰治", sprite:"dazai_thinking", text:"次の中から、「この依頼人の気持ち」に一番近い言葉を選んでほしい。\n……深く考えすぎなくていい。直感で構わないよ。", action:"mg1" },
 
-  { speaker:"太宰治", sprite:"dazai_smile", stage:"base", text:"ふふ。\nやっぱり、そう来ると思った。" },
+  { speaker:"太宰治", sprite:"dazai_smile", text:"ふふ。\nやっぱり、そう来ると思った。" },
 
-  { speaker:"太宰治", sprite:"dazai_smile", stage:"base", text:"じゃあ次。\nこれは依頼人が書こうとして、途中でやめてしまった一文。\n順番を整えれば、きっと自然な形になるはずだよ。", action:"mg2" },
+  { speaker:"太宰治", sprite:"dazai_smile", text:"じゃあ次。\nこれは依頼人が書こうとして、途中でやめてしまった一文。\n順番を整えれば、きっと自然な形になるはずだよ。", action:"mg2" },
 
-  { speaker:"太宰治", sprite:"dazai_smile", stage:"base", text:"……綺麗だね。\n無駄がなくて、それでいて温度がある。" },
+  { speaker:"太宰治", sprite:"dazai_smile", text:"……綺麗だね。\n無駄がなくて、それでいて温度がある。" },
 
-  { speaker:"太宰治", sprite:"dazai_thinking", stage:"base", text:"最後は、とても身近な存在だ。\n四本足で、人より早く朝を知っていて、依頼人の生活リズムを完全に支配している。\nしかも、とても愛されている。" },
-  { speaker:"太宰治", sprite:"dazai_thinking", stage:"base", text:"さて。これは何のことだろう？", action:"mg3" },
+  { speaker:"太宰治", sprite:"dazai_thinking", text:"最後は、とても身近な存在だ。\n四本足で、人より早く朝を知っていて、依頼人の生活リズムを完全に支配している。\nしかも、とても愛されている。" },
+  { speaker:"太宰治", sprite:"dazai_thinking", text:"さて。これは何のことだろう？", action:"mg3" },
 
-  { speaker:"太宰治", sprite:"dazai_smile", stage:"base", text:"正解。\n……妖怪。" },
-  { speaker:"太宰治", sprite:"dazai_smile", stage:"base", text:`ちなみに……君のコーギーの名前は「${CORGI_NAME}」だったね。` },
+  { speaker:"太宰治", sprite:"dazai_smile", text:"正解。\n……妖怪。" },
+  { speaker:"太宰治", sprite:"dazai_smile", text:`ちなみに……君のコーギーの名前は「${CORGI_NAME}」だったね。` },
 
-  { speaker:"太宰治", sprite:"dazai_love", stage:"base", text:"……ここから先は、依頼人から預かった手紙だ。\n代読という形になるけど、許してもらおう。\n――では、読むよ。", action:"letter" },
+  { speaker:"太宰治", sprite:"dazai_love", text:"……ここから先は、依頼人から預かった手紙だ。\n代読という形になるけど、許してもらおう。\n――では、読むよ。", action:"letter" },
 
-  { speaker:"太宰治", sprite:"dazai_love", stage:"base", text:"……だそうだ。\nさて、Allie。\n探偵としての仕事は、ここまで。\nあとは――君自身の答えを聞かせてほしい。", action:"finalQuestion" },
+  { speaker:"太宰治", sprite:"dazai_love", text:"……だそうだ。\nさて、Allie。\n探偵としての仕事は、ここまで。\nあとは――君自身の答えを聞かせてほしい。", action:"finalQuestion" },
 ];
+
+// =========================
+// AUTO “LEAVE SCENE” INDICES
+// (so you do NOT need to add stage fields everywhere)
+// =========================
+const lastIdx = {
+  atsushi: -1,
+  kunikida: -1,
+};
+for (let i = 0; i < SCRIPT.length; i++) {
+  const s = SCRIPT[i].speaker;
+  if (s === "中島敦") lastIdx.atsushi = i;
+  if (s === "国木田独歩") lastIdx.kunikida = i;
+}
 
 // =========================
 // HELPERS
@@ -203,84 +209,57 @@ function setSprite(imgEl, spriteKey){
   const src = SPRITES[spriteKey];
   if(!src) return;
   imgEl.src = src;
+  imgEl.style.opacity = "1";
 }
 
-function clearOverlay(){
-  // Cancel any pending clear from a previous call
-  if(overlayClearTimer) clearTimeout(overlayClearTimer);
-
-  // Fade out where it is (no class reset yet)
-  overlaySprite.style.opacity = "0";
-
-  // Only AFTER it's invisible, reset the class — but this can be cancelled
-  overlayClearTimer = setTimeout(()=>{
-    overlaySprite.className = "";     // reset position only once hidden
-    overlayClearTimer = null;
-  }, 200);
-
-  baseSprite.classList.remove("dimmed");
-}
-
-let overlayCurrentKey = null;   // sprite key currently on overlay
-let overlaySide = null;         // "overlay_left" | "overlay_right"
-
-function hideOverlay(){
-  overlayCurrentKey = null;
-  overlaySide = null;
-  overlaySprite.style.opacity = "0";
-  overlaySprite.className = "";
-  overlaySprite.classList.remove("dimmed");
-}
-
-function showOverlay(spriteKey, side){
-  overlayCurrentKey = spriteKey;
-  overlaySide = side;
-
-  setSprite(overlaySprite, overlayCurrentKey);
-  overlaySprite.style.opacity = "1";
-  overlaySprite.className = (overlaySide === "overlay_left") ? "leftIn" : "rightIn";
-}
-
-function applyStage(line){
-  const stage = line.stage || "base";
-
-  // Explicitly remove overlay if requested
-  if(line.leaveOverlay === true || stage === "base_solo"){
-    hideOverlay();
+function clearSlot(which){
+  if(which === "left"){
+    leftKey = null;
+    leftSprite.style.opacity = "0";
+    leftSprite.src = "";
+    leftSprite.classList.remove("dimmed");
   }
-
-  // If this line explicitly introduces/updates overlay speaker
-  if(stage === "overlay_left" || stage === "overlay_right"){
-    showOverlay(line.sprite, stage);
-  }
-
-  // Base updates: Dazai expression changes
-  if(stage === "base" || stage === "base_solo"){
-    setSprite(baseSprite, line.sprite);
-  }
-
-  // ---- Dimming logic ----
-  const speaker = line.speaker || "";
-
-  // Decide if the speaking character is "base" (Dazai) or "overlay" (Atsushi/Kunikida)
-  const isLetter = speaker.includes("手紙");
-  const isDazaiSpeaking = speaker.startsWith("太宰治") && !isLetter;
-
-  if(isDazaiSpeaking){
-    // Dazai is active
-    baseSprite.classList.remove("dimmed");
-    if(overlayCurrentKey){
-      overlaySprite.classList.add("dimmed");   // <-- this fixes #1
-    }
-  } else {
-    // someone else is active (or letter)
-    baseSprite.classList.add("dimmed");
-    if(overlayCurrentKey){
-      overlaySprite.classList.remove("dimmed");
-    }
+  if(which === "right"){
+    rightKey = null;
+    rightSprite.style.opacity = "0";
+    rightSprite.src = "";
+    rightSprite.classList.remove("dimmed");
   }
 }
 
+function applySceneForLine(line){
+  // 1) Ensure Dazai always exists in center + can change expressions
+  centerKey = line.sprite && line.speaker.startsWith("太宰治") ? line.sprite : centerKey;
+  setSprite(centerSprite, centerKey);
+
+  // 2) If current line is Atsushi / Kunikida, make sure they are “in scene”
+  if(line.speaker === "中島敦"){
+    rightKey = line.sprite || rightKey || "atsushi_neutral";
+    setSprite(rightSprite, rightKey);
+  }
+  if(line.speaker === "国木田独歩"){
+    leftKey = line.sprite || leftKey || "kunikida_neutral";
+    setSprite(leftSprite, leftKey);
+  }
+
+  // 3) After their LAST line has passed, remove them automatically
+  // (idx is global and points at the line being rendered)
+  if (idx > lastIdx.atsushi) clearSlot("right");
+  if (idx > lastIdx.kunikida) clearSlot("left");
+
+  // 4) Dimming: brighten the speaking character, dim others
+  centerSprite.classList.remove("dimmed");
+  leftSprite.classList.remove("dimmed");
+  rightSprite.classList.remove("dimmed");
+
+  let speakingSlot = "center";
+  if(line.speaker === "中島敦") speakingSlot = "right";
+  if(line.speaker === "国木田独歩") speakingSlot = "left";
+
+  if(speakingSlot !== "center") centerSprite.classList.add("dimmed");
+  if(speakingSlot !== "left" && leftKey) leftSprite.classList.add("dimmed");
+  if(speakingSlot !== "right" && rightKey) rightSprite.classList.add("dimmed");
+}
 
 function stopTyping(){
   if(typingTimer) clearInterval(typingTimer);
@@ -334,8 +313,6 @@ function showMinigameContainer(title, hint){
 }
 
 function isAutoAction(action){
-  // Only minigames should auto-open once the line finishes typing.
-  // The letter should NOT auto-run.
   return action === "mg1" || action === "mg2" || action === "mg3" || action === "finalQuestion";
 }
 
@@ -345,8 +322,8 @@ function renderLine(){
   // speaker label
   el.name.textContent = line.speaker;
 
-  // stage sprites
-  applyStage(line);
+  // scene sprites (persistent cast + dimming)
+  applySceneForLine(line);
 
   // reset UI
   el.minigame.classList.add("hidden");
@@ -362,14 +339,13 @@ function renderLine(){
   const speed = typingSpeedFor(line.speaker);
 
   typeText(line.text, speed, () => {
-  // Auto-run ONLY minigames and finalQuestion
-  if(line.action && !actionShown.has(idx)){
-    if(line.action === "mg1" || line.action === "mg2" || line.action === "mg3" || line.action === "finalQuestion"){
-      actionShown.add(idx);
-      runActionIfAny(line);
+    if(line.action && !actionShown.has(idx)){
+      if(line.action === "mg1" || line.action === "mg2" || line.action === "mg3" || line.action === "finalQuestion"){
+        actionShown.add(idx);
+        runActionIfAny(line);
+      }
     }
-  }
-});
+  });
 }
 
 // =========================
@@ -394,7 +370,7 @@ function runActionIfAny(line){
     return;
   }
   if(line.action === "letter"){
-    // Dazai reads letter
+    // Dazai reads letter (ONLY after click)
     el.name.textContent = "太宰治（手紙）";
     const speed = typingSpeedFor("太宰治（手紙）");
     typeText(LETTER_TEXT, speed, () => {
@@ -408,7 +384,7 @@ function runActionIfAny(line){
   }
 }
 
-// ----- MG1: nuance multiple choice (correct = 愛してる) -----
+// ----- MG1 -----
 function showMG1(){
   const {body, status} = showMinigameContainer(
     "ミニゲーム ①：ニュアンス判定",
@@ -433,8 +409,8 @@ function showMG1(){
         status.textContent = "正解。…ふふ。";
         progress.mg1 = true;
         mgLock = false;
-        // reward sprite (Dazai smile on base)
-        setSprite(baseSprite, "dazai_smile");
+        setSprite(centerSprite, "dazai_smile");
+        centerKey = "dazai_smile";
       } else {
         status.textContent = `うーん…惜しい。${c.why}`;
       }
@@ -443,7 +419,7 @@ function showMG1(){
   }
 }
 
-// ----- MG2: reorder fragments; accept any order of first three, d last -----
+// ----- MG2 -----
 function showMG2(){
   const {body, status} = showMinigameContainer(
     "ミニゲーム ②：文の復元",
@@ -492,7 +468,6 @@ function showMG2(){
       e.dataTransfer.setData("text/plain", f.id);
     });
 
-    // tap-to-move for mobile
     elTile.addEventListener("click", ()=>{
       if(elTile.parentElement === pool) zone.appendChild(elTile);
       else pool.appendChild(elTile);
@@ -519,7 +494,7 @@ function showMG2(){
 
   function isValidOrder(order){
     if(order.length !== 4) return false;
-    if(order[3] !== "d") return false; // final must be 心が近く感じられる。
+    if(order[3] !== "d") return false;
     const firstThree = order.slice(0,3);
     const set = new Set(firstThree);
     return set.size === 3 && set.has("a") && set.has("b") && set.has("c");
@@ -535,7 +510,8 @@ function showMG2(){
       status.textContent = "正解。文章が綺麗に戻った。";
       progress.mg2 = true;
       mgLock = false;
-      setSprite(baseSprite, "dazai_smile");
+      setSprite(centerSprite, "dazai_smile");
+      centerKey = "dazai_smile";
     } else {
       status.textContent = "うーん…最後が少し不自然かも。もう一度。";
     }
@@ -547,7 +523,7 @@ function showMG2(){
   };
 }
 
-// ----- MG3: corgi riddle + Japanese-only answer (妖怪 / ようかい). No placeholder leak. -----
+// ----- MG3 -----
 function showMG3(){
   const {body, status} = showMinigameContainer(
     "ミニゲーム ③：身近な存在",
@@ -558,7 +534,7 @@ function showMG3(){
     <div class="choice-grid" id="who"></div>
     <div style="height:10px"></div>
     <div id="nameStep" class="hidden">
-      <div class="mg-hint">次：コーギーの名前は？</div>
+      <div class="mg-hint">次：名前は？（漢字か、ひらがな）</div>
       <input type="text" id="nameInput" placeholder="" autocomplete="off" />
       <div class="mg-actions">
         <button class="btn primary" id="checkName">照合</button>
@@ -572,9 +548,9 @@ function showMG3(){
   const checkName = body.querySelector("#checkName");
 
   const options = [
-    {label:"コーヒーメーカー", ok:false},
-    {label:"目覚まし時計", ok:false},
-    {label:"コーギー", ok:true},
+    {label:"妖怪", ok:true},
+    {label:"探偵", ok:false},
+    {label:"コーギー", ok:false},
   ];
 
   for(const o of options){
@@ -583,7 +559,7 @@ function showMG3(){
     btn.textContent = o.label;
     btn.onclick = ()=>{
       if(o.ok){
-        status.textContent = "正体は…コーギー。ふふ。";
+        status.textContent = "正体は…妖怪。ふふ。";
         nameStep.classList.remove("hidden");
         nameInput.focus();
       } else {
@@ -619,7 +595,8 @@ function showMG3(){
       status.textContent = "正解。……妖怪。";
       progress.mg3 = true;
       mgLock = false;
-      setSprite(baseSprite, "dazai_smile");
+      setSprite(centerSprite, "dazai_smile");
+      centerKey = "dazai_smile";
     } else {
       status.textContent = "うーん…違うみたい。漢字か、ひらがなで。";
     }
@@ -630,7 +607,7 @@ function showMG3(){
   });
 }
 
-// ----- Final Question: Yes/No + end screen -----
+// ----- Final Question -----
 function showFinalQuestion(){
   el.minigame.classList.remove("hidden");
   el.minigame.innerHTML = `
@@ -641,14 +618,7 @@ function showFinalQuestion(){
       <button class="btn floating" id="noBtn">いいえ</button>
     </div>
     <div class="endWrap hidden" id="endWrap">
-      <video
-  class="endGif"
-  id="endGif"
-  autoplay
-  loop
-  muted
-  playsinline
-></video>
+      <video class="endGif" id="endGif" autoplay loop muted playsinline></video>
       <div class="endText" id="endText"></div>
     </div>
   `;
@@ -713,6 +683,9 @@ function showFinalQuestion(){
 
     endWrap.classList.remove("hidden");
     endGif.src = YIPPEE_GIF;
+    // Some browsers need an explicit play() even with autoplay
+    endGif.play?.().catch(()=>{});
+
     endText.textContent =
       "事件解決。💗\n\n" +
       "（太宰治は、満足そうに微笑んだ。）\n\n" +
@@ -739,12 +712,8 @@ function runConfetti(){
 
   function resize(){
     dpr = Math.max(1, window.devicePixelRatio || 1);
-
-    // set the backing store
     canvas.width = Math.floor(window.innerWidth * dpr);
     canvas.height = Math.floor(window.innerHeight * dpr);
-
-    // make 1 unit = 1 CSS pixel
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
@@ -770,7 +739,6 @@ function runConfetti(){
   }
 
   function tick(){
-    // CLEAR IN CSS PIXELS (important!)
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
     let alive = false;
@@ -783,12 +751,10 @@ function runConfetti(){
       p.rot += p.vr;
       p.life -= 1;
 
-      // kill if offscreen
       if(p.y > window.innerHeight + 60) continue;
 
       alive = true;
 
-      // fade near bottom
       const alpha = Math.max(0, Math.min(1, (window.innerHeight - p.y) / 140));
 
       ctx.save();
@@ -806,7 +772,6 @@ function runConfetti(){
   requestAnimationFrame(tick);
 }
 
-
 // =========================
 // EVENTS
 // =========================
@@ -822,7 +787,6 @@ el.nextBtn.addEventListener("click", ()=>{
 
     el.text.textContent = line.text;
 
-    // IMPORTANT: if this line has an auto action, run it now (otherwise you'll be locked)
     if(line.action && isAutoAction(line.action) && !actionShown.has(idx)){
       actionShown.add(idx);
       runActionIfAny(line);
@@ -838,7 +802,7 @@ el.nextBtn.addEventListener("click", ()=>{
   if(line.action === "letter" && !actionShown.has(idx)){
     actionShown.add(idx);
     runActionIfAny(line);
-    return; // stay on this line while letter types
+    return;
   }
 
   // 4) Normal advance
@@ -848,9 +812,8 @@ el.nextBtn.addEventListener("click", ()=>{
   }
 });
 
-
 // Click box to advance (VN feel)
-document.getElementById("dialogueBox").addEventListener("click", (e)=>{
+el.dialogueBox.addEventListener("click", (e)=>{
   if(e.target.closest("#minigame")) return;
   if(e.target.closest("button")) return;
   if(progress.ended) return;
@@ -868,9 +831,9 @@ el.restartBtn.addEventListener("click", ()=>{
   // Preload sprites
   Object.values(SPRITES).forEach(src => { const im = new Image(); im.src = src; });
 
-  // Ensure base is Dazai to anchor interruptions
-  setSprite(baseSprite, "dazai_neutral");
-  clearOverlay();
+  // Start with Dazai visible
+  centerKey = "dazai_neutral";
+  setSprite(centerSprite, centerKey);
 
   renderLine();
 })();
