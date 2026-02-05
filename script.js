@@ -205,8 +205,15 @@ function setSprite(imgEl, spriteKey){
 }
 
 function clearOverlay(){
-  overlaySprite.className = "";
+  // fade out first (no transform jump)
   overlaySprite.style.opacity = "0";
+
+  // remove stage class AFTER the fade finishes
+  // (matches your CSS transition duration ~0.18s)
+  window.setTimeout(()=>{
+    overlaySprite.className = "";
+  }, 200);
+
   baseSprite.classList.remove("dimmed");
 }
 
