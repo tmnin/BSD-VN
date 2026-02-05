@@ -506,7 +506,7 @@ function showMG3(){
     <div class="choice-grid" id="who"></div>
     <div style="height:10px"></div>
     <div id="nameStep" class="hidden">
-      <div class="mg-hint">次：名前は？</div>
+      <div class="mg-hint">次：コーギーの名前は？</div>
       <input type="text" id="nameInput" placeholder="" autocomplete="off" />
       <div class="mg-actions">
         <button class="btn primary" id="checkName">照合</button>
