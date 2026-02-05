@@ -205,17 +205,24 @@ function setSprite(imgEl, spriteKey){
 }
 
 function clearOverlay(){
-  // fade out first (no transform jump)
   overlaySprite.style.opacity = "0";
 
-  // remove stage class AFTER the fade finishes
-  // (matches your CSS transition duration ~0.18s)
+  // disable transitions while resetting class/transform
+  const prev = overlaySprite.style.transition;
+  overlaySprite.style.transition = "none";
+
   window.setTimeout(()=>{
     overlaySprite.className = "";
+    // force reflow so the browser applies the reset cleanly
+    void overlaySprite.offsetHeight;
+
+    // restore transitions
+    overlaySprite.style.transition = prev || "";
   }, 200);
 
   baseSprite.classList.remove("dimmed");
 }
+
 
 function applyStage(line){
   const stage = line.stage || "base";
