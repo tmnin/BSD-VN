@@ -167,7 +167,7 @@ const SCRIPT = [
   { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"それがね、文字だけ残して姿を消してしまってさ。" },
   { speaker:"国木田独歩", sprite:"kunikida_neutral", stage:"overlay_left", text:"規定違反だ。\n私は関与しない。" },
 
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", leaveOverlay:true, text:"――というわけで。\n少々自由な進行になるけど、許してほしい。" },
+  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"――というわけで。\n少々自由な進行になるけど、許してほしい。" },
 
   { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"今回の依頼人は、とても慎重な人物でね。\n自分の気持ちを、そのまま渡すことができなかったらしい。" },
   { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"だから代わりに、いくつかの「手がかり」を残した。\n言葉に関するもの、選び方に関するもの、そして――とても個人的なもの。" },
