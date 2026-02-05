@@ -548,9 +548,9 @@ function showMG3(){
   const checkName = body.querySelector("#checkName");
 
   const options = [
-    {label:"コーヒーメーカー", ok:true},
+    {label:"コーヒーメーカー", ok:false},
     {label:"目覚まし時計", ok:false},
-    {label:"コーギー", ok:false},
+    {label:"コーギー", ok:true},
   ];
 
   for(const o of options){
