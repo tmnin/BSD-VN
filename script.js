@@ -59,9 +59,9 @@ const el = {
 };
 
 // Create base + overlay sprites (two-sprite staging)
-const baseSprite = document.getElementById("speakerSprite"); // reuse existing <img> as base
-baseSprite.id = "baseSprite";
+const baseSprite = document.getElementById("speakerSprite"); // keep this id
 baseSprite.alt = "";
+
 // overlay sprite added
 const overlaySprite = document.createElement("img");
 overlaySprite.id = "overlaySprite";
@@ -220,10 +220,6 @@ function clearOverlay(){
 
   baseSprite.classList.remove("dimmed");
 }
-
-
-let overlayCurrentKey = null;   // which character is currently on overlay (sprite key)
-let overlaySide = null;         // "overlay_left" or "overlay_right"
 
 let overlayCurrentKey = null;   // sprite key currently on overlay
 let overlaySide = null;         // "overlay_left" | "overlay_right"
