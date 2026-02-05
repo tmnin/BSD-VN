@@ -125,6 +125,7 @@ let centerKey = "dazai_neutral";
 let typingTimer = null;
 let isTyping = false;
 let pendingOnDone = null;
+let currentTypingText = "";
 
 // prevents re-mounting the same action repeatedly
 const actionShown = new Set();
@@ -274,6 +275,7 @@ function stopTyping(){
 }
 
 function typeText(fullText, speed, onDone){
+  currentTypingText = fullText;          // <-- add this line
   if(typingTimer) clearInterval(typingTimer);
   isTyping = true;
   el.text.textContent = "";
@@ -780,19 +782,22 @@ el.nextBtn.addEventListener("click", ()=>{
 
   // 1) If typing: fast-forward text AND trigger auto-actions (minigames/final)
   if(isTyping){
-    if(typingTimer) clearInterval(typingTimer);
-    typingTimer = null;
-    isTyping = false;
-    pendingOnDone = null;
+  if(typingTimer) clearInterval(typingTimer);
+  typingTimer = null;
+  isTyping = false;
 
-    el.text.textContent = line.text;
+  const cb = pendingOnDone;     // keep whatever would have happened on finish
+  pendingOnDone = null;
 
-    if(line.action && isAutoAction(line.action) && !actionShown.has(idx)){
-      actionShown.add(idx);
-      runActionIfAny(line);
-    }
+  el.text.textContent = currentTypingText;   // <-- key fix
 
-    return;
+  if (cb) cb(); // optional but nice: ensures any "onDone" logic still runs
+
+  if(line.action && isAutoAction(line.action) && !actionShown.has(idx)){
+    actionShown.add(idx);
+    runActionIfAny(line);
+  }
+  return;
   }
 
   // 2) Block advance if minigame still locked
