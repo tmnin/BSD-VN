@@ -534,7 +534,7 @@ function showMG3(){
     <div class="choice-grid" id="who"></div>
     <div style="height:10px"></div>
     <div id="nameStep" class="hidden">
-      <div class="mg-hint">次：コーギーの名前は？</div>
+      <div class="mg-hint">次：名前は？（漢字か、ひらがな）</div>
       <input type="text" id="nameInput" placeholder="" autocomplete="off" />
       <div class="mg-actions">
         <button class="btn primary" id="checkName">照合</button>
@@ -548,9 +548,9 @@ function showMG3(){
   const checkName = body.querySelector("#checkName");
 
   const options = [
-    {label:"コーヒーメーカー", ok:false},
-    {label:"目覚まし時計", ok:false},
-    {label:"コーギー", ok:true},
+    {label:"妖怪", ok:true},
+    {label:"探偵", ok:false},
+    {label:"コーギー", ok:false},
   ];
 
   for(const o of options){
@@ -559,7 +559,7 @@ function showMG3(){
     btn.textContent = o.label;
     btn.onclick = ()=>{
       if(o.ok){
-        status.textContent = "正体は…コーギー。ふふ。";
+        status.textContent = "正体は…妖怪。ふふ。";
         nameStep.classList.remove("hidden");
         nameInput.focus();
       } else {
