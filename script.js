@@ -130,6 +130,7 @@ let pendingOnDone = null;
 const actionShown = new Set();
 
 // blocks next until minigame solved
+let overlayClearTimer = null;
 let mgLock = false;
 
 const progress = {
@@ -205,19 +206,16 @@ function setSprite(imgEl, spriteKey){
 }
 
 function clearOverlay(){
+  // Cancel any pending clear from a previous call
+  if(overlayClearTimer) clearTimeout(overlayClearTimer);
+
+  // Fade out where it is (no class reset yet)
   overlaySprite.style.opacity = "0";
 
-  // disable transitions while resetting class/transform
-  const prev = overlaySprite.style.transition;
-  overlaySprite.style.transition = "none";
-
-  window.setTimeout(()=>{
-    overlaySprite.className = "";
-    // force reflow so the browser applies the reset cleanly
-    void overlaySprite.offsetHeight;
-
-    // restore transitions
-    overlaySprite.style.transition = prev || "";
+  // Only AFTER it's invisible, reset the class — but this can be cancelled
+  overlayClearTimer = setTimeout(()=>{
+    overlaySprite.className = "";     // reset position only once hidden
+    overlayClearTimer = null;
   }, 200);
 
   baseSprite.classList.remove("dimmed");
@@ -228,21 +226,33 @@ function applyStage(line){
   const stage = line.stage || "base";
 
   if(stage === "base"){
-    // Speaker is Dazai / main line: show on base, hide overlay
     setSprite(baseSprite, line.sprite);
     clearOverlay();
     return;
   }
 
-  // For overlay stages: keep base as Dazai dimmed (don't change base sprite here)
-  // If base sprite isn't loaded yet, ensure it has something (Dazai neutral)
-  if(!baseSprite.src) setSprite(baseSprite, "dazai_neutral");
+  // If an overlay is about to come in, cancel any pending clear that would wipe its class
+  if(overlayClearTimer){
+    clearTimeout(overlayClearTimer);
+    overlayClearTimer = null;
+  }
 
+  if(!baseSprite.src) setSprite(baseSprite, "dazai_neutral");
   baseSprite.classList.add("dimmed");
 
   setSprite(overlaySprite, line.sprite);
-  overlaySprite.className = stage === "overlay_left" ? "leftIn" : "rightIn";
+
+  // Reset overlay to a neutral hidden state WITHOUT transitions fighting us
+  overlaySprite.style.opacity = "0";
+  overlaySprite.className = ""; // start from center (invisible)
+
+  // Next frame: apply the slide-in class so the transition actually runs
+  requestAnimationFrame(()=>{
+    overlaySprite.className = stage === "overlay_left" ? "leftIn" : "rightIn";
+    overlaySprite.style.opacity = "1";
+  });
 }
+
 
 function stopTyping(){
   if(typingTimer) clearInterval(typingTimer);
