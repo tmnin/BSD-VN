@@ -167,7 +167,7 @@ const SCRIPT = [
   { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"それがね、文字だけ残して姿を消してしまってさ。" },
   { speaker:"国木田独歩", sprite:"kunikida_neutral", stage:"overlay_left", text:"規定違反だ。\n私は関与しない。" },
 
-  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"――というわけで。\n少々自由な進行になるけど、許してほしい。" },
+  { speaker:"太宰治", sprite:"dazai_chill", stage:"base", leaveOverlay:true, text:"――というわけで。\n少々自由な進行になるけど、許してほしい。" },
 
   { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"今回の依頼人は、とても慎重な人物でね。\n自分の気持ちを、そのまま渡すことができなかったらしい。" },
   { speaker:"太宰治", sprite:"dazai_chill", stage:"base", text:"だから代わりに、いくつかの「手がかり」を残した。\n言葉に関するもの、選び方に関するもの、そして――とても個人的なもの。" },
@@ -225,38 +225,59 @@ function clearOverlay(){
 let overlayCurrentKey = null;   // which character is currently on overlay (sprite key)
 let overlaySide = null;         // "overlay_left" or "overlay_right"
 
+let overlayCurrentKey = null;   // sprite key currently on overlay
+let overlaySide = null;         // "overlay_left" | "overlay_right"
+
+function hideOverlay(){
+  overlayCurrentKey = null;
+  overlaySide = null;
+  overlaySprite.style.opacity = "0";
+  overlaySprite.className = "";
+  overlaySprite.classList.remove("dimmed");
+}
+
+function showOverlay(spriteKey, side){
+  overlayCurrentKey = spriteKey;
+  overlaySide = side;
+
+  setSprite(overlaySprite, overlayCurrentKey);
+  overlaySprite.style.opacity = "1";
+  overlaySprite.className = (overlaySide === "overlay_left") ? "leftIn" : "rightIn";
+}
+
 function applyStage(line){
   const stage = line.stage || "base";
 
-  // If a line explicitly brings someone in as overlay, update overlay sprite and side
-  if(stage === "overlay_left" || stage === "overlay_right"){
-    overlaySide = stage;
-    overlayCurrentKey = line.sprite;
-
-    setSprite(overlaySprite, overlayCurrentKey);
-
-    // ensure overlay is visible and positioned
-    overlaySprite.style.opacity = "1";
-    overlaySprite.className = (overlaySide === "overlay_left") ? "leftIn" : "rightIn";
+  // Explicitly remove overlay if requested
+  if(line.leaveOverlay === true || stage === "base_solo"){
+    hideOverlay();
   }
 
-  // If stage is base, we only update base sprite (Dazai expression),
-  // but we do NOT clear overlay. This avoids flicker and feels VN-like.
-  if(stage === "base"){
+  // If this line explicitly introduces/updates overlay speaker
+  if(stage === "overlay_left" || stage === "overlay_right"){
+    showOverlay(line.sprite, stage);
+  }
+
+  // Base updates: Dazai expression changes
+  if(stage === "base" || stage === "base_solo"){
     setSprite(baseSprite, line.sprite);
   }
 
-  // Now manage dimming based on who is speaking
-  // If the current line is from Dazai, make him bright and dim overlay
-  const isDazaiSpeaking = line.speaker.startsWith("太宰治") && !line.speaker.includes("手紙");
+  // ---- Dimming logic ----
+  const speaker = line.speaker || "";
+
+  // Decide if the speaking character is "base" (Dazai) or "overlay" (Atsushi/Kunikida)
+  const isLetter = speaker.includes("手紙");
+  const isDazaiSpeaking = speaker.startsWith("太宰治") && !isLetter;
 
   if(isDazaiSpeaking){
+    // Dazai is active
     baseSprite.classList.remove("dimmed");
     if(overlayCurrentKey){
-      overlaySprite.classList.add("dimmed");
+      overlaySprite.classList.add("dimmed");   // <-- this fixes #1
     }
   } else {
-    // someone else speaking (Atsushi / Kunikida)
+    // someone else is active (or letter)
     baseSprite.classList.add("dimmed");
     if(overlayCurrentKey){
       overlaySprite.classList.remove("dimmed");
