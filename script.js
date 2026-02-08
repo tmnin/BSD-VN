@@ -156,8 +156,8 @@ spritesRoot.appendChild(rightSprite);
     }
 
     #centerSprite{ transform: translateX(-50%); opacity:1; z-index:2; }
-    #leftSprite  { transform: translateX(-65%); z-index:3; }
-    #rightSprite { transform: translateX(-35%); z-index:3; }
+    #leftSprite  { transform: translateX(-65%); z-index:2; }
+    #rightSprite { transform: translateX(-35%); z-index:2; }
 
     .dimmed{ opacity:.55 !important; }
   `;
@@ -309,6 +309,31 @@ function applySceneForLine(line){
   let speakingSlot = "center";
   if(line.speaker === "中島敦") speakingSlot = "right";
   if(line.speaker === "国木田独歩") speakingSlot = "left";
+
+    // 5) Layering: speaker in front, others behind
+  const FRONT = 6;
+  const MID   = 5;
+  const BACK  = 4;
+
+  // default all to BACK
+  centerSprite.style.zIndex = BACK;
+  leftSprite.style.zIndex   = BACK;
+  rightSprite.style.zIndex  = BACK;
+
+  // put speaker in front; keep Dazai slightly above others when not speaking
+  if (speakingSlot === "center") {
+    centerSprite.style.zIndex = FRONT;
+    if (leftKey)  leftSprite.style.zIndex  = BACK;
+    if (rightKey) rightSprite.style.zIndex = BACK;
+  } else if (speakingSlot === "left") {
+    leftSprite.style.zIndex   = FRONT;
+    centerSprite.style.zIndex = MID;   // Dazai behind speaker but not “gone”
+    if (rightKey) rightSprite.style.zIndex = BACK;
+  } else { // right
+    rightSprite.style.zIndex  = FRONT;
+    centerSprite.style.zIndex = MID;
+    if (leftKey) leftSprite.style.zIndex = BACK;
+  }
 
   if(speakingSlot !== "center") centerSprite.classList.add("dimmed");
   if(speakingSlot !== "left" && leftKey) leftSprite.classList.add("dimmed");
