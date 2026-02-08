@@ -9,6 +9,11 @@
 <body>
   <canvas id="confetti" aria-hidden="true"></canvas>
 
+<div id="audioControls">
+  <button id="muteBtn">🔊</button>
+  <input id="volumeSlider" type="range" min="0" max="100" value="18">
+</div>
+
   <!-- Title Screen Overlay -->
 <div id="titleScreen" class="titleScreen">
   <div class="titleCard">
@@ -20,8 +25,12 @@
       <button id="startBtn" class="btn primary titleBtn">はじめる</button>
       <button id="continueBtn" class="btn titleBtn hidden">つづきから</button>
     </div>
+    <div class="titleAudioHint">
+      🎧 よりお楽しみいただくため、ヘッドホンのご使用をおすすめします。
+    </div>
 
     <div class="titleHint">クリックで開始（EnterでもOK）</div>
+    
   </div>
 </div>
 

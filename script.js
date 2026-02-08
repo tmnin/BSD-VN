@@ -7,8 +7,27 @@ const CORGI_NAME = "Yokai";
 
 // local mp4 (loops)
 const YIPPEE_GIF = "images/gif.mp4";
+// Background music (put your chosen file in /images)
+const BGM_SRC = "images/bgm.mp3";
 
-// Your letter content (Dazai reads it)
+// SFX (you already have this)
+const YAY_SFX = "images/yay.mp3";
+const chime = new Audio("images/chime.mp3");
+chime.volume = 0.25;
+
+const muteBtn = document.getElementById("muteBtn");
+const volumeSlider = document.getElementById("volumeSlider");
+
+volumeSlider.addEventListener("input", ()=>{
+  bgm.volume = volumeSlider.value / 100;
+});
+
+muteBtn.addEventListener("click", ()=>{
+  bgm.muted = !bgm.muted;
+  muteBtn.textContent = bgm.muted ? "🔇" : "🔊";
+});
+
+
 const LETTER_TEXT =
 `${HER}へ。
 
@@ -57,6 +76,26 @@ const el = {
   confetti: document.getElementById("confetti"),
   dialogueBox: document.getElementById("dialogueBox"),
 };
+
+// =========================
+// AUDIO
+// =========================
+const bgm = new Audio(BGM_SRC);
+bgm.loop = true;
+bgm.volume = 0.18;     // light, non-distracting
+bgm.preload = "auto";
+
+const yay = new Audio(YAY_SFX);
+yay.loop = false;
+yay.volume = 0.9;
+yay.preload = "auto";
+
+let bgmStarted = false;
+function startBgmOnce(){
+  if(bgmStarted) return;
+  bgmStarted = true;
+  bgm.play().catch(()=>{});
+}
 
 // =========================
 // TITLE SCREEN
@@ -192,6 +231,8 @@ const progress = {
   mg3: false,
   ended: false,
 };
+
+
 
 // =========================
 // SCRIPT (Japanese)
@@ -757,6 +798,12 @@ function showFinalQuestion(){
 
   yesBtn.addEventListener("click", ()=>{
     runConfetti();
+    
+        // play once; BGM keeps going
+    try{
+      yay.currentTime = 0;
+      yay.play().catch(()=>{});
+    } catch(_) {}
 
     yesBtn.disabled = true;
     noBtn.disabled = true;
@@ -856,6 +903,8 @@ function runConfetti(){
 // EVENTS
 // =========================
 el.nextBtn.addEventListener("click", ()=>{
+  chime.currentTime = 0;
+  chime.play().catch(()=>{});
   const line = SCRIPT[idx];
 
   // 1) If typing: fast-forward text AND trigger auto-actions (minigames/final)
@@ -927,7 +976,12 @@ el.restartBtn.addEventListener("click", ()=>{
   showTitle();
 
   function startFresh(){
-    // reset core state (in case player hit restart and came back)
+    // start background music on purpose
+    if(!bgmStarted){
+      bgmStarted = true;
+      bgm.play().catch(()=>{});
+    }
+
     idx = 0;
     actionShown.clear();
     mgLock = false;
@@ -946,6 +1000,7 @@ el.restartBtn.addEventListener("click", ()=>{
     renderLine();
     saveProgress();
   }
+
 
   function continueGame(){
     const s = loadProgress();

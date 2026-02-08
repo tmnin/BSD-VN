@@ -357,3 +357,96 @@ body.preTitle #ui{
 body.preTitle #sprites{
   opacity: .85; /* keep background visible */
 }
+
+.titleAudioHint{
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+}
+
+/* ===== Title screen polish (lighter + VN-y) ===== */
+#titleScreen{
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 22px;
+
+  /* airy, not dark */
+  background:
+    radial-gradient(900px 520px at 50% 35%, rgba(255,255,255,.28), rgba(255,255,255,0) 60%),
+    radial-gradient(1200px 700px at 50% 110%, rgba(122,78,246,.14), rgba(0,0,0,0) 55%),
+    rgba(0,0,0,.20);
+  backdrop-filter: blur(8px);
+}
+
+.titleCard{
+  width: min(740px, 100%);
+  border-radius: 22px;
+  padding: 26px 22px 18px;
+  text-align: center;
+
+  /* glass */
+  background: rgba(255,255,255,.62);
+  border: 1px solid rgba(255,255,255,.35);
+  box-shadow: 0 28px 90px rgba(0,0,0,.22);
+  backdrop-filter: blur(10px);
+
+  /* subtle “ending-card” highlight */
+  position: relative;
+  overflow: hidden;
+}
+
+.titleCard::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background:
+    radial-gradient(600px 220px at 50% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%),
+    radial-gradient(480px 320px at 80% 60%, rgba(255,77,166,.10), rgba(255,255,255,0) 60%);
+  pointer-events:none;
+}
+
+.titleEyebrow{ opacity:.75; letter-spacing:.18em; font-size:12px; }
+.titleMain{ font-size:52px; font-weight:800; letter-spacing:.06em; margin: 6px 0 2px; color: #141414; }
+.titleSub{ font-size:14px; opacity:.75; margin-bottom: 14px; color: #141414; }
+
+.titleHint, .titleAudioHint{
+  font-size: 12px;
+  opacity: .7;
+  margin-top: 8px;
+  color: #141414;
+}
+
+/* Buttons: match your VN buttons */
+.titleBtns{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+.titleBtn{ min-width: 180px; }
+
+
+#audioControls{
+  position: fixed;
+  top: 12px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(6px);
+  padding: 6px 8px;
+  border-radius: 12px;
+  z-index: 3000;
+}
+
+#muteBtn{
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#volumeSlider{
+  width: 70px;
+}
