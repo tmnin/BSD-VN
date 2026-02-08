@@ -280,3 +280,80 @@ body{
 .dimmed{
   opacity:.55 !important;
 }
+
+/* =========================
+   TITLE SCREEN
+   ========================= */
+.titleScreen{
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 22px;
+  background:
+    radial-gradient(1200px 600px at 50% 30%, rgba(255,255,255,.10), rgba(0,0,0,.75)),
+    rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+}
+
+.titleCard{
+  width: min(720px, 100%);
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 30px 80px rgba(0,0,0,.55);
+  background: rgba(20,20,20,.55);
+  padding: 26px 22px 20px;
+  text-align:center;
+  color: rgba(255,255,255,.92);
+}
+
+.titleEyebrow{
+  font-size: 12px;
+  letter-spacing: .18em;
+  opacity: .85;
+  margin-bottom: 10px;
+}
+
+.titleMain{
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  margin: 2px 0 6px;
+  text-shadow: 0 14px 40px rgba(0,0,0,.55);
+}
+
+.titleSub{
+  font-size: 14px;
+  opacity: .9;
+  margin-bottom: 16px;
+}
+
+.titleBtns{
+  display:flex;
+  gap: 10px;
+  justify-content:center;
+  flex-wrap: wrap;
+  margin: 10px 0 8px;
+}
+
+.titleBtn{
+  min-width: 180px;
+}
+
+.titleHint{
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: .75;
+}
+
+/* Optional: hide the dialogue UI until game starts */
+body.preTitle #ui{
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+body.preTitle #sprites{
+  opacity: .85; /* keep background visible */
+}

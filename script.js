@@ -59,6 +59,59 @@ const el = {
 };
 
 // =========================
+// TITLE SCREEN
+// =========================
+const title = {
+  screen: document.getElementById("titleScreen"),
+  startBtn: document.getElementById("startBtn"),
+  continueBtn: document.getElementById("continueBtn"),
+};
+
+const SAVE_KEY = "bsd_vn_save_v1";
+
+function saveProgress(){
+  const data = {
+    idx,
+    progress,
+    actionShown: [...actionShown],
+    leftKey,
+    rightKey,
+    centerKey,
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch(_) {}
+}
+
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  } catch(_) {
+    return null;
+  }
+}
+
+function hasSave(){
+  const s = loadProgress();
+  return !!(s && typeof s.idx === "number");
+}
+
+function showTitle(){
+  document.body.classList.add("preTitle");
+  if(title?.screen) title.screen.style.display = "flex";
+  if(title?.continueBtn){
+    if(hasSave()) title.continueBtn.classList.remove("hidden");
+    else title.continueBtn.classList.add("hidden");
+  }
+}
+
+function hideTitle(){
+  document.body.classList.remove("preTitle");
+  if(title?.screen) title.screen.style.display = "none";
+}
+
+
+// =========================
 // 3-SLOT SPRITES (left/center/right)
 // =========================
 const spritesRoot = el.sprites;
@@ -814,7 +867,9 @@ el.nextBtn.addEventListener("click", ()=>{
   if(idx < SCRIPT.length - 1){
     idx++;
     renderLine();
+    saveProgress();
   }
+
 });
 
 // Click box to advance (VN feel)
@@ -832,13 +887,87 @@ el.restartBtn.addEventListener("click", ()=>{
 // =========================
 // START
 // =========================
+// =========================
+// START
+// =========================
 (function init(){
   // Preload sprites
   Object.values(SPRITES).forEach(src => { const im = new Image(); im.src = src; });
 
-  // Start with Dazai visible
+  // Start with Dazai visible (so background scene looks alive behind title)
   centerKey = "dazai_neutral";
   setSprite(centerSprite, centerKey);
 
-  renderLine();
+  // Show title overlay first
+  showTitle();
+
+  function startFresh(){
+    // reset core state (in case player hit restart and came back)
+    idx = 0;
+    actionShown.clear();
+    mgLock = false;
+
+    progress.mg1 = false;
+    progress.mg2 = false;
+    progress.mg3 = false;
+    progress.ended = false;
+
+    leftKey = null;
+    rightKey = null;
+    centerKey = "dazai_neutral";
+    setSprite(centerSprite, centerKey);
+
+    hideTitle();
+    renderLine();
+    saveProgress();
+  }
+
+  function continueGame(){
+    const s = loadProgress();
+    if(!s){ startFresh(); return; }
+
+    idx = s.idx ?? 0;
+
+    // restore progress + actionShown
+    if(s.progress){
+      progress.mg1 = !!s.progress.mg1;
+      progress.mg2 = !!s.progress.mg2;
+      progress.mg3 = !!s.progress.mg3;
+      progress.ended = !!s.progress.ended;
+    }
+    actionShown.clear();
+    (s.actionShown || []).forEach(i => actionShown.add(i));
+
+    leftKey = s.leftKey ?? null;
+    rightKey = s.rightKey ?? null;
+    centerKey = s.centerKey ?? "dazai_neutral";
+
+    // restore sprites into slots
+    setSprite(centerSprite, centerKey);
+    if(leftKey) setSprite(leftSprite, leftKey);
+    if(rightKey) setSprite(rightSprite, rightKey);
+
+    hideTitle();
+    renderLine();
+  }
+
+  // Wire buttons
+  title?.startBtn?.addEventListener("click", startFresh);
+  title?.continueBtn?.addEventListener("click", continueGame);
+
+  // Click anywhere on title to start (but don't steal button clicks)
+  title?.screen?.addEventListener("click", (e)=>{
+    if(e.target.closest("button")) return;
+    startFresh();
+  });
+
+  // Keyboard shortcuts
+  window.addEventListener("keydown", (e)=>{
+    if(title?.screen?.style.display !== "none"){
+      if(e.key === "Enter") startFresh();
+      if(e.key === "Escape" && hasSave()) continueGame();
+    }
+  });
+
+  // Auto-save periodically: after every advance, we’ll also save (see below)
 })();
