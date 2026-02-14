@@ -138,6 +138,48 @@ body{
   border-top: 1px solid rgba(0,0,0,.10);
 }
 
+/* VN-style input (for MG3 + any future text fields) */
+#minigame input[type="text"]{
+  width: min(420px, 100%);
+  box-sizing: border-box;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(160, 140, 255, 0.55);
+  background: rgba(255, 255, 255, 0.85);
+
+  font-size: 14px;
+  color: rgba(20,20,20,0.92);
+
+  outline: none;
+  box-shadow: 0 8px 22px rgba(120, 90, 200, 0.12);
+  transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease;
+}
+
+#minigame input[type="text"]::placeholder{
+  color: rgba(20,20,20,0.45);
+}
+
+#minigame input[type="text"]:focus{
+  border-color: rgba(122, 78, 246, 0.9);
+  box-shadow: 0 10px 30px rgba(122, 78, 246, 0.20);
+  transform: translateY(-1px);
+}
+
+/* Optional: make the “照合” button align nicer with the input */
+#minigame #nameStep .mg-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+#minigame #nameInput{
+  max-width: 360px;
+}
+
+
 .mg-title{
   font-weight:700;
   color: var(--muted);
