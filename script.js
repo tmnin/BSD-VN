@@ -772,21 +772,22 @@ function showMG3(){
 function showFinalQuestion(){
   el.minigame.classList.remove("hidden");
   el.minigame.innerHTML = `
-    <div class="vnCard">
-      <div class="mg-title">最終質問</div>
-      <div class="mg-hint">答えを聞かせて。…“いいえ”は捕まえられないかも。</div>
-      <div class="arena" id="arena">
+  <div class="vnCard">
+    <div class="mg-title">最終質問</div>
+    <div class="mg-hint">答えを聞かせて。…“いいえ”は捕まえられないかも。</div>
 
+    <div class="arena" id="arena">
       <button class="btn primary floating" id="yesBtn">はい</button>
       <button class="btn floating" id="noBtn">いいえ</button>
-      </div>
-      <div class="endWrap hidden" id="endWrap">
-      </div>
     </div>
+
+    <!-- Keep end media INSIDE the card, and hidden until "はい" -->
+    <div class="endWrap hidden" id="endWrap">
       <video class="endGif" id="endGif" autoplay loop muted playsinline></video>
       <div class="endText" id="endText"></div>
     </div>
-  `;
+  </div>
+`;
 
   el.nextBtn.classList.add("hidden");
 
