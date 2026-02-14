@@ -186,6 +186,31 @@ body{
   color: rgba(20,20,20,0.45);
 }
 
+/* VN-style text input (force-styled) */
+#minigame .vnInput{
+  width: min(420px, 100%);
+  box-sizing: border-box;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(160, 140, 255, 0.55);
+  background: rgba(255, 255, 255, 0.85);
+
+  font-size: 14px;
+  color: rgba(20,20,20,0.92);
+
+  outline: none;
+  box-shadow: 0 8px 22px rgba(120, 90, 200, 0.12);
+  transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease;
+}
+
+#minigame .vnInput:focus{
+  border-color: rgba(122, 78, 246, 0.9);
+  box-shadow: 0 10px 30px rgba(122, 78, 246, 0.20);
+  transform: translateY(-1px);
+}
+
 #minigame input[type="text"]:focus{
   border-color: rgba(122, 78, 246, 0.9);
   box-shadow: 0 10px 30px rgba(122, 78, 246, 0.20);

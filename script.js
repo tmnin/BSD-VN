@@ -659,7 +659,7 @@ function showMG3(){
     <div style="height:10px"></div>
     <div id="nameStep" class="hidden">
       <div class="mg-hint">次：コーギーの名前は？（漢字か、ひらがな）</div>
-      <input type="text" id="nameInput" placeholder="" autocomplete="off" />
+      <input type="text" id="nameInput" class="vnInput" placeholder="" autocomplete="off" />
       <div class="mg-actions">
         <button class="btn primary" id="checkName">照合</button>
       </div>
