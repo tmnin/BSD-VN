@@ -12,41 +12,11 @@ const YAY_SFX = "images/yay.mp3";
 const chime = new Audio("images/chime.mp3");
 chime.volume = 0.25;
 
-const muteBtn = document.getElementById("muteBtn");
-const volumeSlider = document.getElementById("volumeSlider");
-
-function syncAudioUI(){
-  const v = Number(volumeSlider.value) / 100;
-
-  bgm.volume = v;
-
-  const shouldMute = (v === 0);
-  bgm.muted = shouldMute;
-
-  muteBtn.textContent = bgm.muted ? "🔇" : "🔊";
-}
-
-volumeSlider.addEventListener("input", syncAudioUI);
-
-muteBtn.addEventListener("click", ()=>{
-  const currentlyMuted = bgm.muted || (Number(volumeSlider.value) === 0);
-
-  if(!currentlyMuted){
-    volumeSlider.value = 0;
-  } else {
-    if(Number(volumeSlider.value) === 0) volumeSlider.value = 18;
-  }
-  syncAudioUI();
-});
-
-syncAudioUI();
-
 // =========================
-// AUDIO
+// AUDIO (create audio FIRST)
 // =========================
 const bgm = new Audio(BGM_SRC);
 bgm.loop = true;
-bgm.volume = 0.18;
 bgm.preload = "auto";
 
 const yay = new Audio(YAY_SFX);
@@ -54,13 +24,66 @@ yay.loop = false;
 yay.volume = 0.9;
 yay.preload = "auto";
 
-let bgmStarted = false;
-function startBgmOnce(){
-  if(bgmStarted) return;
-  bgmStarted = true;
-  bgm.play().catch(()=>{});
+// =========================
+// AUDIO UI (then wire UI)
+// =========================
+const muteBtn = document.getElementById("muteBtn");
+const volumeSlider = document.getElementById("volumeSlider");
+
+// remember last non-zero slider value for unmute
+let lastNonZero = Number(volumeSlider?.value ?? 18) || 18;
+
+function syncAudioUI() {
+  if (!volumeSlider || !muteBtn) return;
+
+  const sliderVal = Number(volumeSlider.value);
+  const v = Math.max(0, Math.min(1, sliderVal / 100));
+
+  bgm.volume = v;
+
+  const shouldMute = (sliderVal === 0);
+  bgm.muted = shouldMute;
+
+  muteBtn.textContent = bgm.muted ? "🔇" : "🔊";
+
+  if (!shouldMute) lastNonZero = sliderVal;
 }
 
+if (volumeSlider) {
+  // set initial volume based on slider
+  syncAudioUI();
+
+  // update icon immediately while dragging
+  volumeSlider.addEventListener("input", syncAudioUI);
+}
+
+if (muteBtn) {
+  muteBtn.addEventListener("click", () => {
+    if (!volumeSlider) return;
+
+    const isMutedNow = bgm.muted || Number(volumeSlider.value) === 0;
+
+    if (isMutedNow) {
+      // unmute -> restore lastNonZero (or default 18)
+      volumeSlider.value = String(lastNonZero || 18);
+    } else {
+      // mute -> set slider to 0
+      volumeSlider.value = "0";
+    }
+
+    syncAudioUI();
+  });
+}
+
+// =========================
+// BGM start helper
+// =========================
+let bgmStarted = false;
+function startBgmOnce() {
+  if (bgmStarted) return;
+  bgmStarted = true;
+  bgm.play().catch(() => {});
+}
 
 const LETTER_TEXT =
 `${HER}へ。
