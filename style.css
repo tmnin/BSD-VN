@@ -450,3 +450,19 @@ body.preTitle #sprites{
 #volumeSlider{
   width: 70px;
 }
+
+/* ===== VN-style card (purple, rounded, glassy) ===== */
+.vnCard{
+  background: rgba(237, 230, 255, 0.85);
+  border: 1px solid rgba(180, 160, 255, 0.45);
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(120, 90, 200, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+/* Optional: tighten text inside */
+.vnCard p,
+.vnCard label{
+  margin: 6px 0;
+}

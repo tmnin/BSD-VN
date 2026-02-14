@@ -422,16 +422,19 @@ function typeText(fullText, speed, onDone){
 function showMinigameContainer(title, hint){
   el.minigame.classList.remove("hidden");
   el.minigame.innerHTML = `
-    <div class="mg-title">${title}</div>
-    <div class="mg-hint">${hint}</div>
-    <div id="mgBody"></div>
-    <div id="mgStatus" class="mg-status"></div>
+    <div class="vnCard">
+      <div class="mg-title">${title}</div>
+      <div class="mg-hint">${hint}</div>
+      <div id="mgBody"></div>
+      <div id="mgStatus" class="mg-status"></div>
+    </div>
   `;
   return {
     body: el.minigame.querySelector("#mgBody"),
     status: el.minigame.querySelector("#mgStatus")
   };
 }
+
 
 function isAutoAction(action){
   return action === "mg1" || action === "mg2" || action === "mg3" || action === "finalQuestion";
@@ -732,13 +735,17 @@ function showMG3(){
 function showFinalQuestion(){
   el.minigame.classList.remove("hidden");
   el.minigame.innerHTML = `
-    <div class="mg-title">最終質問</div>
-    <div class="mg-hint">答えを聞かせて。…“いいえ”は捕まえられないかも。</div>
-    <div class="arena" id="arena">
+    <div class="vnCard">
+      <div class="mg-title">最終質問</div>
+      <div class="mg-hint">答えを聞かせて。…“いいえ”は捕まえられないかも。</div>
+      <div class="arena" id="arena">
+
       <button class="btn primary floating" id="yesBtn">はい</button>
       <button class="btn floating" id="noBtn">いいえ</button>
+      </div>
+      <div class="endWrap hidden" id="endWrap">
+      </div>
     </div>
-    <div class="endWrap hidden" id="endWrap">
       <video class="endGif" id="endGif" autoplay loop muted playsinline></video>
       <div class="endText" id="endText"></div>
     </div>
@@ -1003,6 +1010,12 @@ el.restartBtn.addEventListener("click", ()=>{
 
 
   function continueGame(){
+    // start background music if not already playing
+    if(!bgmStarted){
+      bgmStarted = true;
+      bgm.play().catch(()=>{});
+    }
+
     const s = loadProgress();
     if(!s){ startFresh(); return; }
 
