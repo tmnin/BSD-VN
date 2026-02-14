@@ -41,6 +41,26 @@ muteBtn.addEventListener("click", ()=>{
 
 syncAudioUI();
 
+// =========================
+// AUDIO
+// =========================
+const bgm = new Audio(BGM_SRC);
+bgm.loop = true;
+bgm.volume = 0.18;
+bgm.preload = "auto";
+
+const yay = new Audio(YAY_SFX);
+yay.loop = false;
+yay.volume = 0.9;
+yay.preload = "auto";
+
+let bgmStarted = false;
+function startBgmOnce(){
+  if(bgmStarted) return;
+  bgmStarted = true;
+  bgm.play().catch(()=>{});
+}
+
 
 const LETTER_TEXT =
 `${HER}へ。
@@ -90,26 +110,6 @@ const el = {
   confetti: document.getElementById("confetti"),
   dialogueBox: document.getElementById("dialogueBox"),
 };
-
-// =========================
-// AUDIO
-// =========================
-const bgm = new Audio(BGM_SRC);
-bgm.loop = true;
-bgm.volume = 0.18;     // light, non-distracting
-bgm.preload = "auto";
-
-const yay = new Audio(YAY_SFX);
-yay.loop = false;
-yay.volume = 0.9;
-yay.preload = "auto";
-
-let bgmStarted = false;
-function startBgmOnce(){
-  if(bgmStarted) return;
-  bgmStarted = true;
-  bgm.play().catch(()=>{});
-}
 
 // =========================
 // TITLE SCREEN
