@@ -402,10 +402,10 @@ body{
 }
 
 .titleEyebrow{
-  font-size: 12px;
+  color: rgba(20, 20, 20, 0.85); /* near-black, soft */
+  opacity: 1;                   /* override any inherited opacity */
   letter-spacing: .18em;
-  opacity: .85;
-  margin-bottom: 10px;
+  font-size: 12px;
 }
 
 .titleMain{

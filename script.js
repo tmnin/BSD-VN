@@ -19,12 +19,31 @@ const muteBtn = document.getElementById("muteBtn");
 const volumeSlider = document.getElementById("volumeSlider");
 
 volumeSlider.addEventListener("input", ()=>{
-  bgm.volume = volumeSlider.value / 100;
+  const v = volumeSlider.value / 100;
+  bgm.volume = v;
+
+  if(v === 0){
+    bgm.muted = true;
+    muteBtn.textContent = "🔇";
+  } else {
+    bgm.muted = false;
+    muteBtn.textContent = "🔊";
+  }
 });
 
 muteBtn.addEventListener("click", ()=>{
   bgm.muted = !bgm.muted;
-  muteBtn.textContent = bgm.muted ? "🔇" : "🔊";
+
+  if(bgm.muted){
+    muteBtn.textContent = "🔇";
+    volumeSlider.value = 0;
+  } else {
+    muteBtn.textContent = "🔊";
+    if(volumeSlider.value == 0){
+      volumeSlider.value = 18;   // restore to default
+      bgm.volume = 0.18;
+    }
+  }
 });
 
 
