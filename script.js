@@ -5,12 +5,9 @@ const HER = "Allie";
 const YOU = "Abeer";
 const CORGI_NAME = "Yokai";
 
-// local mp4 (loops)
 const YIPPEE_GIF = "images/gif.mp4";
-// Background music (put your chosen file in /images)
 const BGM_SRC = "images/bgm.mp3";
 
-// SFX (you already have this)
 const YAY_SFX = "images/yay.mp3";
 const chime = new Audio("images/chime.mp3");
 chime.volume = 0.25;
@@ -18,33 +15,31 @@ chime.volume = 0.25;
 const muteBtn = document.getElementById("muteBtn");
 const volumeSlider = document.getElementById("volumeSlider");
 
-volumeSlider.addEventListener("input", ()=>{
-  const v = volumeSlider.value / 100;
+function syncAudioUI(){
+  const v = Number(volumeSlider.value) / 100;
+
   bgm.volume = v;
 
-  if(v === 0){
-    bgm.muted = true;
-    muteBtn.textContent = "🔇";
-  } else {
-    bgm.muted = false;
-    muteBtn.textContent = "🔊";
-  }
-});
+  const shouldMute = (v === 0);
+  bgm.muted = shouldMute;
+
+  muteBtn.textContent = bgm.muted ? "🔇" : "🔊";
+}
+
+volumeSlider.addEventListener("input", syncAudioUI);
 
 muteBtn.addEventListener("click", ()=>{
-  bgm.muted = !bgm.muted;
+  const currentlyMuted = bgm.muted || (Number(volumeSlider.value) === 0);
 
-  if(bgm.muted){
-    muteBtn.textContent = "🔇";
+  if(!currentlyMuted){
     volumeSlider.value = 0;
   } else {
-    muteBtn.textContent = "🔊";
-    if(volumeSlider.value == 0){
-      volumeSlider.value = 18;   // restore to default
-      bgm.volume = 0.18;
-    }
+    if(Number(volumeSlider.value) === 0) volumeSlider.value = 18;
   }
+  syncAudioUI();
 });
+
+syncAudioUI();
 
 
 const LETTER_TEXT =
